@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Costa Verde Heat — Open World Crime Game</title>
+<link rel="icon" href="data:,">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1c2c;
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif; color: #fff; }
+  #app { position: fixed; inset: 0; }
+  canvas#scene { display: block; width: 100%; height: 100%; }
+  .hidden { display: none !important; }
+  /* ---------- HUD ---------- */
+  #hud { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+  #topleft { position: absolute; top: 14px; left: 16px; text-shadow: 0 2px 4px rgba(0,0,0,.7); }
+  #money { font-size: 30px; font-weight: 800; color: #7dff9a; letter-spacing: 1px; }
+  #money small { font-size: 15px; color: #cfe; }
+  #healthbar { width: 210px; height: 12px; margin-top: 6px; background: rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.5); border-radius: 6px; overflow: hidden; }
+  #healthfill { height: 100%; width: 100%; background: linear-gradient(90deg,#ff5a4e,#ff9a3d); }
+  #armorline { font-size: 13px; margin-top: 4px; color: #ffe9a8; font-weight: 600; }
+  #stars { margin-top: 6px; font-size: 26px; letter-spacing: 3px; color: #ffd23d;
+    text-shadow: 0 0 8px rgba(255,180,0,.8); min-height: 32px; }
+  #stars .off { color: rgba(255,255,255,.25); text-shadow: none; }
+  #minimapWrap { position: absolute; top: 14px; right: 16px; width: 220px; height: 220px;
+    border: 3px solid rgba(255,255,255,.65); border-radius: 50%; overflow: hidden;
+    background: #12324a; box-shadow: 0 0 0 4px rgba(0,0,0,.35), 0 4px 18px rgba(0,0,0,.5); }
+  #minimap { width: 100%; height: 100%; display: block; }
+  #clock { position: absolute; top: 242px; right: 22px; font-size: 15px; font-weight: 700;
+    color: #fff; text-shadow: 0 2px 4px #000; text-align: right; }
+  #objective { position: absolute; left: 50%; bottom: 118px; transform: translateX(-50%);
+    max-width: 640px; text-align: center; font-size: 17px; font-weight: 600;
+    background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 10px;
+    padding: 9px 18px; text-shadow: 0 1px 3px #000; }
+  #objective b { color: #ffd23d; }
+  #toast { position: absolute; left: 50%; top: 22%; transform: translateX(-50%);
+    font-size: 34px; font-weight: 900; letter-spacing: 2px; color: #ffd23d;
+    text-shadow: 0 3px 0 #7a2e00, 0 6px 18px rgba(0,0,0,.8); text-align: center; }
+  #toast small { display: block; font-size: 18px; color: #fff; letter-spacing: 1px;
+    text-shadow: 0 2px 6px #000; margin-top: 4px; }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px;
+    transform: translate(-50%,-50%); }
+  #crosshair::before, #crosshair::after { content: ""; position: absolute; background: #fff;
+    box-shadow: 0 0 4px #000; }
+  #crosshair::before { left: 10px; top: 0; width: 2px; height: 22px; }
+  #crosshair::after { left: 0; top: 10px; width: 22px; height: 2px; }
+  #speedo { position: absolute; right: 20px; bottom: 18px; text-align: right;
+    text-shadow: 0 2px 5px #000; }
+  #speedo .n { font-size: 44px; font-weight: 900; font-style: italic; }
+  #speedo .u { font-size: 13px; color: #ffd23d; font-weight: 700; letter-spacing: 2px; }
+  #speedo .car { font-size: 15px; font-weight: 700; }
+  #controls-hint { position: absolute; left: 16px; bottom: 16px; font-size: 13px; line-height: 1.7;
+    color: rgba(255,255,255,.85); text-shadow: 0 1px 3px #000;
+    background: rgba(0,0,0,.35); padding: 8px 12px; border-radius: 8px; }
+  #controls-hint b { color: #ffd23d; }
+  #missionList { position: absolute; left: 16px; top: 190px; font-size: 13px; line-height: 1.8;
+    text-shadow: 0 1px 3px #000; background: rgba(0,0,0,.35); padding: 8px 12px; border-radius: 8px; }
+  #missionList .done { color: #7dff9a; } #missionList .cur { color: #ffd23d; font-weight: 700; }
+  #missionList .todo { color: rgba(255,255,255,.6); }
+  /* ---------- Screens ---------- */
+  .screen { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: linear-gradient(180deg, rgba(6,20,34,.25) 0%, rgba(6,20,34,.55) 55%, rgba(6,20,34,.88) 100%); }
+  .screen h1 { font-size: 64px; font-weight: 900; font-style: italic; letter-spacing: 2px;
+    color: #fff; text-shadow: 0 4px 0 #ff5a3c, 0 10px 30px rgba(0,0,0,.9); }
+  .screen h1 span { color: #ffd23d; }
+  .screen h2 { font-size: 20px; font-weight: 600; color: #ffe9a8; margin-top: 6px; letter-spacing: 4px; }
+  .screen p.story { max-width: 620px; margin: 18px 0 6px; font-size: 16px; line-height: 1.6;
+    color: #eaf6ff; text-shadow: 0 2px 4px #000; }
+  .screen .keys { font-size: 14px; line-height: 2; color: #cfe6ff; margin: 10px 0 18px;
+    background: rgba(0,0,0,.4); padding: 10px 20px; border-radius: 10px; }
+  .screen .keys b { color: #ffd23d; }
+  .btn { pointer-events: auto; cursor: pointer; font-size: 20px; font-weight: 800; letter-spacing: 2px;
+    color: #1a1200; background: linear-gradient(180deg,#ffe066,#ffb52e); border: none; border-radius: 10px;
+    padding: 14px 44px; margin: 6px; box-shadow: 0 5px 0 #a86a00, 0 8px 20px rgba(0,0,0,.6); }
+  .btn:hover { filter: brightness(1.08); } .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #a86a00; }
+  .btn.ghost { background: rgba(255,255,255,.14); color: #fff; box-shadow: 0 5px 0 rgba(0,0,0,.5); }
+  #pauseScreen h1 { font-size: 46px; }
+  #wasted { background: rgba(20,0,0,.55); }
+  #wasted h1 { color: #ff4d4d; text-shadow: 0 4px 0 #5a0000, 0 10px 30px #000; }
+  #loading { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center;
+    justify-content: center; background: #0b1c2c; font-size: 20px; font-weight: 700; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+  <div id="hud" class="hidden">
+    <div id="topleft">
+      <div id="money">$<span id="moneyVal">250</span> <small>COSTA VERDE</small></div>
+      <div id="healthbar"><div id="healthfill"></div></div>
+      <div id="armorline">RIO VEGA &nbsp;•&nbsp; <span id="armorVal">PISTOL READY</span></div>
+      <div id="stars"></div>
+    </div>
+    <div id="minimapWrap"><canvas id="minimap" width="220" height="220"></canvas></div>
+    <div id="clock"><span id="clockVal">18:24</span><br><span id="dayVal">COSTA VERDE • SUNSET</span></div>
+    <div id="objective"><b id="objTitle">FREE ROAM</b><br><span id="objText">Explore Costa Verde. Steal a car with E. Start a mission from the map.</span></div>
+    <div id="toast" class="hidden"></div>
+    <div id="crosshair" class="hidden"></div>
+    <div id="speedo" class="hidden"><div class="car" id="carName">SEDAN</div><div class="n"><span id="speedVal">0</span></div><div class="u">KM/H</div></div>
+    <div id="controls-hint"><b>WASD</b> move / drive &nbsp; <b>SHIFT</b> sprint &nbsp; <b>E</b> enter / exit car<br><b>MOUSE</b> aim &amp; camera &nbsp; <b>CLICK</b> shoot &nbsp; <b>SPACE</b> brake<br><b>M</b> mission &nbsp; <b>P</b> pause &nbsp; <b>R</b> respawn car</div>
+    <div id="missionList"></div>
+  </div>
+
+  <div id="startScreen" class="screen">
+    <h1>COSTA VERDE <span>HEAT</span></h1>
+    <h2>AN OPEN-WORLD CRIME STORY</h2>
+    <p class="story">Sun, salt air and stolen cars. <b>Rio Vega</b> came home to Costa Verde broke —
+    and Marisol Duarte has a plan to take the city back from Don Salazar's crew, one job at a time.
+    Steal cars, outrun the Costa Verde Police, and pull off six jobs to own the streets.</p>
+    <div class="keys"><b>WASD</b> move / drive &nbsp;•&nbsp; <b>SHIFT</b> sprint &nbsp;•&nbsp; <b>E</b> enter / steal car &nbsp;•&nbsp;
+      <b>MOUSE</b> camera &amp; aim &nbsp;•&nbsp; <b>CLICK</b> shoot &nbsp;•&nbsp; <b>SPACE</b> brake &nbsp;•&nbsp; <b>P</b> pause &nbsp;•&nbsp; <b>M</b> next mission</div>
+    <button class="btn" id="btnStart">▶ &nbsp;START ENGINE</button>
+    <button class="btn ghost hidden" id="btnContinue">CONTINUE — SAVE FOUND</button>
+    <p style="margin-top:14px;font-size:13px;color:#9fc3dd">A fully original game. No network needed — everything runs from these files.</p>
+  </div>
+
+  <div id="pauseScreen" class="screen hidden">
+    <h1>PAUSED</h1>
+    <p class="story">Costa Verde waits for no one. Your progress is saved automatically.</p>
+    <button class="btn" id="btnResume">RESUME</button>
+    <button class="btn ghost" id="btnRestart">RESTART STORY</button>
+    <button class="btn ghost" id="btnQuit">QUIT TO TITLE</button>
+  </div>
+
+  <div id="wasted" class="screen hidden">
+    <h1>WASTED</h1>
+    <p class="story" id="wastedText">The Costa Verde Police got you, Rio.</p>
+    <button class="btn" id="btnRespawn">GET UP — HOSPITAL ($50)</button>
+  </div>
+
+  <div id="loading">LOADING COSTA VERDE…</div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/city.js"></script>
+<script src="js/vehicles.js"></script>
+<script src="js/pedestrians.js"></script>
+<script src="js/player.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
