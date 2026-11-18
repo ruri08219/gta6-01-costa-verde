@@ -1,8 +1,9 @@
 # Costa Verde Heat
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Game: Costa Verde Heat](https://img.shields.io/badge/Game-Costa%20Verde%20Heat-orange.svg)](game/index.html)
-[![make.fun](https://img.shields.io/badge/make.fun-gta6--01-blue.svg)](https://make.fun)
+[![make.fun · gta6-01](https://make.fun/badge/gta6-01.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![rank](https://make.fun/badge/gta6-01/ruri08219/gta6-01-costa-verde/rank.svg)](https://make.fun/bounty/gta6-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
+[![reward](https://make.fun/badge/gta6-01/ruri08219/gta6-01-costa-verde/reward.svg)](https://make.fun/bounty/gta6-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-01)
 
 An original open-world crime game set in **Costa Verde**, a sun-soaked coastal
 city. You are **Rio Vega**, broke and back home — and Marisol Duarte has a plan
